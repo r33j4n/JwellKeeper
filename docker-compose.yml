@@ -8,6 +8,8 @@ services:
       MYSQL_USER: ${MYSQL_USER:-jwellkeeper}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-jwellkeeper}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+    ports:
+      - "127.0.0.1:3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
