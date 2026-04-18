@@ -66,6 +66,7 @@ services:
       BACKEND_API_URL: http://backend:8080
       SESSION_SECRET: ${SESSION_SECRET:-local-development-session-secret-change-me}
       NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-JwellKeeper}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
     ports:
       - "3000:3000"
 

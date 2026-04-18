@@ -9,7 +9,7 @@ function cookieOptions() {
   return {
     httpOnly: true,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.COOKIE_SECURE !== "false" && process.env.NODE_ENV === "production",
     path: "/",
     maxAge: sessionMaxAge,
   };
