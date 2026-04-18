@@ -1,0 +1,68 @@
+services:
+  db:
+    image: mysql:8.4
+    container_name: jwellkeeper-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-jwellkeeper}
+      MYSQL_USER: ${MYSQL_USER:-jwellkeeper}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-jwellkeeper}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: jwellkeeper-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-jwellkeeper}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: ${MYSQL_USER:-jwellkeeper}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-jwellkeeper}
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-very-long-production-secret-at-least-32-bytes}
+      JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-1440}
+      QR_SIGNING_SECRET: ${QR_SIGNING_SECRET:-change-me-to-a-separate-qr-signing-secret-32-bytes}
+      QR_IMAGE_SIZE: ${QR_IMAGE_SIZE:-300}
+      STORAGE_ROOT: /app/storage
+    ports:
+      - "8080:8080"
+    volumes:
+      - backend-storage:/app/storage
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 60s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: jwellkeeper-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      BACKEND_API_URL: http://backend:8080
+      SESSION_SECRET: ${SESSION_SECRET:-local-development-session-secret-change-me}
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-JwellKeeper}
+    ports:
+      - "3000:3000"
+
+volumes:
+  mysql-data:
+  backend-storage:

@@ -1,0 +1,58 @@
+# ------------------------------
+# Java / Maven build artifacts
+# ------------------------------
+target/
+*.class
+*.jar
+*.war
+*.ear
+dependency-reduced-pom.xml
+
+# JVM crash / profiling dumps
+hs_err_pid*
+replay_pid*
+
+# ------------------------------
+# Logs
+# ------------------------------
+*.log
+logs/
+
+# ------------------------------
+# Environment / local-only config
+# ------------------------------
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Local Spring overrides (keep shared config in git)
+src/main/resources/application-local.yml
+src/main/resources/application-*.local.yml
+
+# ------------------------------
+# Runtime-generated storage
+# ------------------------------
+storage/tenant/
+
+# ------------------------------
+# IDE / editor files
+# ------------------------------
+.idea/
+*.iml
+out/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ------------------------------
+# OS files
+# ------------------------------
+.DS_Store
+Thumbs.db
+
+# ------------------------------
+# Temporary files
+# ------------------------------
+*.tmp

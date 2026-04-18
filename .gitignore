@@ -1,0 +1,116 @@
+# ============================================================
+# SECRETS — never commit these
+# ============================================================
+.env
+.env.local
+.env.production
+.env.*.local
+backend/.env
+backend/.env.*
+frontend/.env
+frontend/.env.*
+!**/.env.example
+!**/.env.sample
+
+# ============================================================
+# BACKEND — Java / Spring Boot / Maven
+# ============================================================
+backend/target/
+backend/*.class
+backend/*.jar
+backend/*.war
+backend/*.ear
+backend/dependency-reduced-pom.xml
+
+# JVM crash & profiling dumps
+backend/hs_err_pid*
+backend/replay_pid*
+
+# Runtime-generated file storage (uploaded QR images, etc.)
+backend/storage/tenant/
+
+# Local Spring Boot profile overrides
+backend/src/main/resources/application-local.yml
+backend/src/main/resources/application-*.local.yml
+
+# IntelliJ IDEA — includes dataSources.local.xml which stores DB passwords
+backend/.idea/
+backend/*.iml
+backend/out/
+
+# ============================================================
+# FRONTEND — Node / Next.js / TypeScript
+# ============================================================
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/dist/
+
+# TypeScript incremental build info (auto-regenerated)
+frontend/tsconfig.tsbuildinfo
+frontend/*.tsbuildinfo
+
+# Next.js auto-generated env type file
+frontend/next-env.d.ts
+
+# Test coverage
+frontend/coverage/
+
+# Linter & bundler caches
+frontend/.eslintcache
+frontend/.swc/
+frontend/.turbo/
+frontend/.cache/
+
+# Package manager debug logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnpm-debug.log*
+frontend/.npm/
+frontend/.pnpm-store/
+
+# Vercel deployment
+frontend/.vercel
+
+# SSL certs accidentally placed here
+frontend/*.pem
+
+# Yarn Berry (keep only if using Yarn)
+frontend/.yarn/*
+!frontend/.yarn/patches
+!frontend/.yarn/plugins
+!frontend/.yarn/releases
+!frontend/.yarn/versions
+frontend/.pnp.*
+
+# ============================================================
+# OS FILES
+# ============================================================
+.DS_Store
+**/.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ============================================================
+# EDITORS & IDEs
+# ============================================================
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+*.tmp
+
+# ============================================================
+# DOCKER / DEPLOYMENT
+# ============================================================
+docker-compose.override.yml
+
+# ============================================================
+# LOGS (anywhere in the project)
+# ============================================================
+*.log
+logs/
