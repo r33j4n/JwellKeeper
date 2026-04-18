@@ -3,6 +3,7 @@ services:
     image: mysql:8.4
     container_name: jwellkeeper-db
     restart: unless-stopped
+    mem_limit: 512m
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-jwellkeeper}
       MYSQL_USER: ${MYSQL_USER:-jwellkeeper}
@@ -25,6 +26,7 @@ services:
       dockerfile: Dockerfile
     container_name: jwellkeeper-backend
     restart: unless-stopped
+    mem_limit: 600m
     depends_on:
       db:
         condition: service_healthy
@@ -37,6 +39,7 @@ services:
       QR_SIGNING_SECRET: ${QR_SIGNING_SECRET:-change-me-to-a-separate-qr-signing-secret-32-bytes}
       QR_IMAGE_SIZE: ${QR_IMAGE_SIZE:-300}
       STORAGE_ROOT: /app/storage
+      JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseContainerSupport"
     ports:
       - "8080:8080"
     volumes:
@@ -54,6 +57,7 @@ services:
       dockerfile: Dockerfile
     container_name: jwellkeeper-frontend
     restart: unless-stopped
+    mem_limit: 300m
     depends_on:
       backend:
         condition: service_healthy
