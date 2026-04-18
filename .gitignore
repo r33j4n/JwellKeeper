@@ -113,4 +113,3 @@ docker-compose.override.yml
 # LOGS (anywhere in the project)
 # ============================================================
 *.log
-logs/

@@ -16,7 +16,6 @@ replay_pid*
 # Logs
 # ------------------------------
 *.log
-logs/
 
 # ------------------------------
 # Environment / local-only config
