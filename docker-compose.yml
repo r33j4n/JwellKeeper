@@ -41,7 +41,7 @@ services:
       STORAGE_ROOT: /app/storage
       JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseContainerSupport"
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     volumes:
       - backend-storage:/app/storage
     healthcheck:
@@ -68,7 +68,7 @@ services:
       NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-JwellKeeper}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
 
 volumes:
   mysql-data:
