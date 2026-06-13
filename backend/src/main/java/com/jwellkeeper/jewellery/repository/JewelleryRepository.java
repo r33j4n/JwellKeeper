@@ -33,8 +33,7 @@ public interface JewelleryRepository extends JpaRepository<Jewellery, UUID> {
               and (:status is null or j.status = :status)
               and (:typeId is null or j.typeId = :typeId)
               and (:karat is null or j.karat = :karat)
-              and (
-                  :q is null
+              and (:q is null
                   or lower(j.type.name) like :q
                   or lower(j.designName) like :q
                   or lower(j.notes) like :q
@@ -46,6 +45,8 @@ public interface JewelleryRepository extends JpaRepository<Jewellery, UUID> {
                         and lower(b.billNo) like :q
                   )
               )
+              and (:minWeight is null or j.weight >= :minWeight)
+              and (:maxWeight is null or j.weight <= :maxWeight)
             """)
     Page<Jewellery> search(
             @Param("tenantId") UUID tenantId,
@@ -53,6 +54,8 @@ public interface JewelleryRepository extends JpaRepository<Jewellery, UUID> {
             @Param("typeId") UUID typeId,
             @Param("karat") String karat,
             @Param("q") String q,
+            @Param("minWeight") java.math.BigDecimal minWeight,
+            @Param("maxWeight") java.math.BigDecimal maxWeight,
             Pageable pageable
     );
 
@@ -64,19 +67,22 @@ public interface JewelleryRepository extends JpaRepository<Jewellery, UUID> {
               and j.deletedAt is not null
               and (:typeId is null or j.typeId = :typeId)
               and (:karat is null or j.karat = :karat)
-              and (
-                  :q is null
+              and (:q is null
                   or lower(j.type.name) like :q
                   or lower(j.designName) like :q
                   or lower(j.notes) like :q
                   or lower(j.karat) like :q
               )
+              and (:minWeight is null or j.weight >= :minWeight)
+              and (:maxWeight is null or j.weight <= :maxWeight)
             """)
     Page<Jewellery> searchArchived(
             @Param("tenantId") UUID tenantId,
             @Param("typeId") UUID typeId,
             @Param("karat") String karat,
             @Param("q") String q,
+            @Param("minWeight") java.math.BigDecimal minWeight,
+            @Param("maxWeight") java.math.BigDecimal maxWeight,
             Pageable pageable
     );
 

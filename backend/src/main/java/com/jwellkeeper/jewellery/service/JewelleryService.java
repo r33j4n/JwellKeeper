@@ -33,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,13 +90,13 @@ public class JewelleryService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<JewelleryResponse> list(JewelleryStatus status, UUID typeId, String karat, String q, Pageable pageable) {
+    public PageResponse<JewelleryResponse> list(JewelleryStatus status, UUID typeId, String karat, String q, BigDecimal minWeight, BigDecimal maxWeight, Pageable pageable) {
         UUID tenantId = TenantContext.requireTenantId();
         if (status == JewelleryStatus.ARCHIVED) {
             throw new ForbiddenException("Use the protected archived jewellery endpoint");
         }
         String normalizedKarat = karat == null || karat.isBlank() ? null : normalizeKarat(karat);
-        var page = repository.search(tenantId, status, typeId, normalizedKarat, toLike(q), pageable);
+        var page = repository.search(tenantId, status, typeId, normalizedKarat, toLike(q), minWeight, maxWeight, pageable);
         Map<UUID, BillRef> billRefs = findBillRefs(tenantId, page.getContent().stream().map(Jewellery::getId).toList());
         return PageResponse.from(page.map(jewellery -> toResponse(jewellery, billRefs.get(jewellery.getId()))));
     }
@@ -108,7 +109,7 @@ public class JewelleryService {
         authorizationService.validateOwnerPassword(request.ownerPassword(), "Owner password is required to view archived jewellery");
         UUID tenantId = TenantContext.requireTenantId();
         String normalizedKarat = request.karat() == null || request.karat().isBlank() ? null : normalizeKarat(request.karat());
-        var page = repository.searchArchived(tenantId, request.typeId(), normalizedKarat, toLike(request.q()), pageable);
+        var page = repository.searchArchived(tenantId, request.typeId(), normalizedKarat, toLike(request.q()), request.minWeight(), request.maxWeight(), pageable);
         Map<UUID, BillRef> billRefs = findBillRefs(tenantId, page.getContent().stream().map(Jewellery::getId).toList());
         return PageResponse.from(page.map(jewellery -> toResponse(jewellery, billRefs.get(jewellery.getId()))));
     }

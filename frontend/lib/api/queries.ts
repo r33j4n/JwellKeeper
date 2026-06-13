@@ -37,9 +37,9 @@ export const authApi = {
 export const jewelleryApi = {
   types: () => apiClient.get<JewelleryType[]>("/jewellery/types").then((r) => r.data),
   createType: (name: string) => apiClient.post<JewelleryType>("/jewellery/types", { name }).then((r) => r.data),
-  list: (params: { page?: number; size?: number; status?: JewelleryStatus | ""; typeId?: string; karat?: string; q?: string }) =>
+  list: (params: { page?: number; size?: number; status?: JewelleryStatus | ""; typeId?: string; karat?: string; q?: string; minWeight?: string; maxWeight?: string }) =>
     apiClient.get<PageResponse<Jewellery>>("/jewellery", { params }).then((r) => r.data),
-  archived: (payload: { ownerPassword: string; typeId?: string; karat?: string; q?: string }, params: { page?: number; size?: number }) =>
+  archived: (payload: { ownerPassword: string; typeId?: string; karat?: string; q?: string; minWeight?: string; maxWeight?: string }, params: { page?: number; size?: number }) =>
     apiClient.post<PageResponse<Jewellery>>("/jewellery/archived/search", payload, { params }).then((r) => r.data),
   get: (id: string) => apiClient.get<Jewellery>(`/jewellery/${id}`).then((r) => r.data),
   create: (payload: { typeId: string; karat: string; designName?: string | null; weight: string; notes?: string | null }) =>

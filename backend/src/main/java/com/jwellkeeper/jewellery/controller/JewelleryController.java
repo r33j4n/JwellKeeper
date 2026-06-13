@@ -60,9 +60,11 @@ public class JewelleryController {
             @RequestParam(required = false) UUID typeId,
             @RequestParam(required = false) String karat,
             @RequestParam(required = false) String q,
+            @RequestParam(required = false) java.math.BigDecimal minWeight,
+            @RequestParam(required = false) java.math.BigDecimal maxWeight,
             Pageable pageable
     ) {
-        return ApiResponse.success("Jewellery fetched", jewelleryService.list(status, typeId, karat, q, pageable));
+        return ApiResponse.success("Jewellery fetched", jewelleryService.list(status, typeId, karat, q, minWeight, maxWeight, pageable));
     }
 
     @PostMapping("/archived/search")

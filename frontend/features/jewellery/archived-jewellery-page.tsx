@@ -22,14 +22,16 @@ export function ArchivedJewelleryPage() {
   const [typeId, setTypeId] = useState("");
   const [karat, setKarat] = useState("");
   const [q, setQ] = useState("");
+  const [minWeight, setMinWeight] = useState("");
+  const [maxWeight, setMaxWeight] = useState("");
   const size = 10;
   const unlocked = Boolean(ownerPassword);
 
   const types = useQuery({ queryKey: ["jewellery-types"], queryFn: jewelleryApi.types });
   const archived = useQuery({
-    queryKey: ["archived-jewellery", page, typeId, karat, q, unlockVersion],
+    queryKey: ["archived-jewellery", page, typeId, karat, q, unlockVersion, minWeight, maxWeight],
     queryFn: () => jewelleryApi.archived(
-      { ownerPassword, typeId: typeId || undefined, karat: karat || undefined, q: q || undefined },
+      { ownerPassword, typeId: typeId || undefined, karat: karat || undefined, q: q || undefined, minWeight: minWeight || undefined, maxWeight: maxWeight || undefined },
       { page, size },
     ),
     enabled: unlocked,
@@ -81,13 +83,14 @@ export function ArchivedJewelleryPage() {
       ) : (
         <>
           <Card>
-            <CardContent className="grid gap-3 p-4 md:grid-cols-4">
+            <CardContent className="grid gap-3 p-4 md:grid-cols-6 items-center">
               <Select
                 value={typeId}
                 onChange={(event) => {
                   setPage(0);
                   setTypeId(event.target.value);
                 }}
+                className="md:col-span-2 lg:col-span-1"
               >
                 <option value="">All types</option>
                 {types.data?.map((type) => (
@@ -97,22 +100,44 @@ export function ArchivedJewelleryPage() {
                 ))}
               </Select>
               <Input
-                placeholder="Karat, e.g. 22K"
+                placeholder="Karat"
                 value={karat}
                 onChange={(event) => {
                   setPage(0);
                   setKarat(event.target.value.toUpperCase());
                 }}
+                className="md:col-span-2 lg:col-span-1"
               />
               <Input
-                placeholder="Search type, design, notes"
+                type="number"
+                placeholder="Min Weight"
+                value={minWeight}
+                onChange={(event) => {
+                  setPage(0);
+                  setMinWeight(event.target.value);
+                }}
+                className="md:col-span-2 lg:col-span-1"
+              />
+              <Input
+                type="number"
+                placeholder="Max Weight"
+                value={maxWeight}
+                onChange={(event) => {
+                  setPage(0);
+                  setMaxWeight(event.target.value);
+                }}
+                className="md:col-span-2 lg:col-span-1"
+              />
+              <Input
+                placeholder="Search type, notes"
                 value={q}
                 onChange={(event) => {
                   setPage(0);
                   setQ(event.target.value);
                 }}
+                className="md:col-span-4 lg:col-span-1"
               />
-              <Button variant="outline" onClick={() => archived.refetch()} disabled={archived.isFetching}>
+              <Button variant="outline" onClick={() => archived.refetch()} disabled={archived.isFetching} className="md:col-span-6 lg:col-span-1">
                 <Search className="h-4 w-4" />
                 {archived.isFetching ? "Searching..." : "Search"}
               </Button>

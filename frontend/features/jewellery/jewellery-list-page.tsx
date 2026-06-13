@@ -23,12 +23,14 @@ export function JewelleryListPage() {
   const [typeId, setTypeId] = useState("");
   const [karat, setKarat] = useState("");
   const [q, setQ] = useState("");
+  const [minWeight, setMinWeight] = useState("");
+  const [maxWeight, setMaxWeight] = useState("");
   const size = 10;
 
   const types = useQuery({ queryKey: ["jewellery-types"], queryFn: jewelleryApi.types });
   const jewellery = useQuery({
-    queryKey: ["jewellery", page, status, typeId, karat, q],
-    queryFn: () => jewelleryApi.list({ page, size, status, typeId: typeId || undefined, karat: karat || undefined, q: q || undefined }),
+    queryKey: ["jewellery", page, status, typeId, karat, q, minWeight, maxWeight],
+    queryFn: () => jewelleryApi.list({ page, size, status, typeId: typeId || undefined, karat: karat || undefined, q: q || undefined, minWeight: minWeight || undefined, maxWeight: maxWeight || undefined }),
   });
   const shopState = useQuery({ queryKey: ["shop-state"], queryFn: () => shopApi.state() });
   const shopClosed = shopState.data?.status === "CLOSED";
@@ -70,13 +72,14 @@ export function JewelleryListPage() {
         </div>
       )}
       <Card className="p-4">
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-6 items-center">
           <Select
             value={status}
             onChange={(event) => {
               setPage(0);
               setStatus(event.target.value as JewelleryStatus | "");
             }}
+            className="md:col-span-2 lg:col-span-1"
           >
             <option value="">All statuses</option>
             <option value="AVAILABLE">Available</option>
@@ -89,6 +92,7 @@ export function JewelleryListPage() {
               setPage(0);
               setTypeId(event.target.value);
             }}
+            className="md:col-span-2 lg:col-span-1"
           >
             <option value="">All types</option>
             {types.data?.map((type) => (
@@ -98,20 +102,42 @@ export function JewelleryListPage() {
             ))}
           </Select>
           <Input
-            placeholder="Karat, e.g. 22K"
+            placeholder="Karat"
             value={karat}
             onChange={(event) => {
               setPage(0);
               setKarat(event.target.value.toUpperCase());
             }}
+            className="md:col-span-2 lg:col-span-1"
           />
           <Input
-            placeholder="Search bill no, sub-type, notes"
+            type="number"
+            placeholder="Min Weight"
+            value={minWeight}
+            onChange={(event) => {
+              setPage(0);
+              setMinWeight(event.target.value);
+            }}
+            className="md:col-span-3 lg:col-span-1"
+          />
+          <Input
+            type="number"
+            placeholder="Max Weight"
+            value={maxWeight}
+            onChange={(event) => {
+              setPage(0);
+              setMaxWeight(event.target.value);
+            }}
+            className="md:col-span-3 lg:col-span-1"
+          />
+          <Input
+            placeholder="Search bill no, notes..."
             value={q}
             onChange={(event) => {
               setPage(0);
               setQ(event.target.value);
             }}
+            className="md:col-span-6 lg:col-span-1"
           />
         </div>
       </Card>
