@@ -256,7 +256,7 @@ export function BillCreatePage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
-      <PageHeader title="Create bill" description="Scan jewellery QR codes or browse to add items." />
+      <PageHeader title="Create bill" description="Scan jewellery with the QR reader first, then switch to the camera scanner if needed." />
 
       {/* Blocked banners */}
       {shopClosed && (

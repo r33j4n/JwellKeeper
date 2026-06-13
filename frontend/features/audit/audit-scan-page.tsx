@@ -18,7 +18,6 @@ export function AuditScanPage() {
   const audits = useQuery({ queryKey: ["audits", "scanner"], queryFn: () => auditApi.list({ size: 50 }) });
   const openAudits = useMemo(() => audits.data?.content.filter((audit) => audit.status === "OPEN") || [], [audits.data]);
   const [auditId, setAuditId] = useState("");
-  const [manualToken, setManualToken] = useState("");
   const selectedAudit = openAudits.find((audit) => audit.id === auditId) || openAudits[0];
 
   async function stopCameraThen(action: () => void) {
@@ -62,7 +61,7 @@ export function AuditScanPage() {
 
   return (
     <div className="grid gap-6">
-      <PageHeader title="Scan audit QR" description="Use a phone, tablet, desktop webcam, or manual token fallback." />
+      <PageHeader title="Scan audit QR" description="Use the QR code scanner first, then switch to the camera scanner if needed." />
       <Card>
         <CardContent className="grid gap-4 p-4 md:grid-cols-5">
           <Select value={selectedAudit?.id || ""} onChange={(event) => setAuditId(event.target.value)}>
@@ -88,7 +87,7 @@ export function AuditScanPage() {
         <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
           <Card>
             <CardHeader>
-              <h2 className="font-semibold">Camera scanner</h2>
+              <h2 className="font-semibold">Scan items</h2>
             </CardHeader>
             <CardContent>
               <QrScanner ref={scannerRef} onScan={(token) => scan.mutate(token)} />
@@ -96,13 +95,9 @@ export function AuditScanPage() {
           </Card>
           <Card>
             <CardHeader>
-              <h2 className="font-semibold">Manual and close</h2>
+              <h2 className="font-semibold">Close actions</h2>
             </CardHeader>
             <CardContent className="grid gap-3">
-              <Input placeholder="Paste QR token" value={manualToken} onChange={(event) => setManualToken(event.target.value)} />
-              <Button disabled={!manualToken || scan.isPending} onClick={() => scan.mutate(manualToken)}>
-                Submit token
-              </Button>
               {selectedAudit.missingItems > 0 ? (
                 <>
                   <Input
