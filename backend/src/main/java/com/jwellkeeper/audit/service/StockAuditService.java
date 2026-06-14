@@ -150,7 +150,7 @@ public class StockAuditService {
         if (audit.getStatus() != StockAuditStatus.OPEN) {
             throw new ConflictException("Audit is already closed");
         }
-        QrPayload payload = qrCodeService.verify(request.token());
+        QrPayload payload = resolveQrPayload(request.token(), tenantId);
         if (!tenantId.equals(payload.tenantId())) {
             throw new ForbiddenException("QR code belongs to another tenant");
         }
@@ -178,6 +178,12 @@ public class StockAuditService {
                 ));
         logService.log("AUDIT_ITEM_SCANNED", "StockAudit", audit.getId(), "SUCCESS", auditName(audit) + " item scanned", Map.of("jewelleryId", payload.jewelleryId().toString(), "auditName", auditName(audit), "runNumber", audit.getRunNumber()));
         return new AuditScanResponse(toResponse(audit), mapper.toItemResponse(item), false, "Audit item scanned");
+    }
+
+    private QrPayload resolveQrPayload(String token, UUID tenantId) {
+        return jewelleryRepository.findByTenantIdAndQrPayloadTokenAndDeletedAtIsNull(tenantId, token)
+                .map(jewellery -> new QrPayload(jewellery.getId(), tenantId))
+                .orElseGet(() -> qrCodeService.verify(token));
     }
 
     @Transactional

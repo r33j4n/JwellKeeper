@@ -1,11 +1,13 @@
 package com.jwellkeeper.jewellery.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.zxing.EncodeHintType;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.jwellkeeper.common.exception.BadRequestException;
 import com.jwellkeeper.jewellery.dto.QrPayload;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,12 +18,18 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.Base64;
 
 @Service
 public class QrCodeService {
 
     private static final String HMAC_ALGORITHM = "HmacSHA256";
+    private static final String NEW_TOKEN_PREFIX = "v2_";
+    private static final int NEW_TOKEN_BYTES = 15;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final ObjectMapper objectMapper;
     private final String secret;
@@ -38,13 +46,7 @@ public class QrCodeService {
     }
 
     public String createToken(QrPayload payload) {
-        try {
-            String payloadJson = objectMapper.writeValueAsString(payload);
-            String encodedPayload = base64Url(payloadJson.getBytes(StandardCharsets.UTF_8));
-            return encodedPayload + "." + sign(encodedPayload);
-        } catch (Exception ex) {
-            throw new BadRequestException("Unable to create QR payload");
-        }
+        return NEW_TOKEN_PREFIX + base64Url(randomBytes(NEW_TOKEN_BYTES));
     }
 
     public QrPayload verify(String token) {
@@ -77,13 +79,25 @@ public class QrCodeService {
     public byte[] generatePngBytes(String token) {
         try {
             QRCodeWriter writer = new QRCodeWriter();
-            BitMatrix matrix = writer.encode(token, BarcodeFormat.QR_CODE, imageSize, imageSize);
+            Map<EncodeHintType, Object> hints = new EnumMap<>(EncodeHintType.class);
+            hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
+            hints.put(EncodeHintType.MARGIN, 1);
+            if (token != null && token.startsWith(NEW_TOKEN_PREFIX)) {
+                hints.put(EncodeHintType.QR_VERSION, 2);
+            }
+            BitMatrix matrix = writer.encode(token, BarcodeFormat.QR_CODE, imageSize, imageSize, hints);
             ByteArrayOutputStream output = new ByteArrayOutputStream();
             MatrixToImageWriter.writeToStream(matrix, "PNG", output);
             return output.toByteArray();
         } catch (WriterException | java.io.IOException ex) {
             throw new BadRequestException("Unable to generate QR image");
         }
+    }
+
+    private byte[] randomBytes(int length) {
+        byte[] bytes = new byte[length];
+        SECURE_RANDOM.nextBytes(bytes);
+        return bytes;
     }
 
     private String sign(String encodedPayload) throws Exception {

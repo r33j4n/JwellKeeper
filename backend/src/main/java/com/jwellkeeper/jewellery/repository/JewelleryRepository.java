@@ -89,6 +89,9 @@ public interface JewelleryRepository extends JpaRepository<Jewellery, UUID> {
     @EntityGraph(attributePaths = "type")
     Optional<Jewellery> findByIdAndTenantIdAndDeletedAtIsNull(UUID id, UUID tenantId);
 
+        @EntityGraph(attributePaths = "type")
+        Optional<Jewellery> findByTenantIdAndQrPayloadTokenAndDeletedAtIsNull(UUID tenantId, String qrPayloadToken);
+
     @EntityGraph(attributePaths = "type")
     List<Jewellery> findByTenantIdAndStatusAndDeletedAtIsNull(UUID tenantId, JewelleryStatus status);
 

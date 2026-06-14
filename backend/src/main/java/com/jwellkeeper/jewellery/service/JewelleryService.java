@@ -163,8 +163,13 @@ public class JewelleryService {
 
     @Transactional(readOnly = true)
     public JewelleryResponse resolveQr(String token) {
-        QrPayload payload = qrCodeService.verify(token);
         UUID tenantId = TenantContext.requireTenantId();
+        Jewellery byShortToken = repository.findByTenantIdAndQrPayloadTokenAndDeletedAtIsNull(tenantId, token)
+                .orElse(null);
+        if (byShortToken != null) {
+            return toResponse(byShortToken);
+        }
+        QrPayload payload = qrCodeService.verify(token);
         if (!tenantId.equals(payload.tenantId())) {
             throw new ForbiddenException("QR code belongs to another tenant");
         }
