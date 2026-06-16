@@ -10,7 +10,11 @@ export default async function proxy(request: NextRequest) {
   const isAuthenticated = Boolean(session);
 
   if (path === "/") {
-    return NextResponse.redirect(new URL(isAuthenticated ? "/dashboard" : "/login", request.url));
+    if (isAuthenticated) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+
+    return NextResponse.next();
   }
 
   if (authRoutes.includes(path) && isAuthenticated) {
@@ -20,6 +24,7 @@ export default async function proxy(request: NextRequest) {
   if (path.startsWith("/dashboard") && !isAuthenticated) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", path);
+    loginUrl.searchParams.set("reason", "auth-required");
     return NextResponse.redirect(loginUrl);
   }
 

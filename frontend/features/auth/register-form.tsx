@@ -34,7 +34,7 @@ export function RegisterForm() {
   }
 
   return (
-    <Card className="w-full max-w-xl">
+    <Card className="w-full">
       <CardContent className="grid gap-6 p-6">
         <div>
           <h1 className="text-2xl font-semibold">Register shop</h1>

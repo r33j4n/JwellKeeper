@@ -17,6 +17,9 @@ import type { LoginRequest } from "@/lib/api/types";
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const redirectTarget = searchParams.get("next");
+  const loginReason = searchParams.get("reason");
+  const needsAuthentication = loginReason === "auth-required";
   const setUser = useAuthStore((state) => state.setUser);
   const {
     register,
@@ -28,16 +31,21 @@ export function LoginForm() {
     const user = await authApi.login(values);
     setUser(user);
     toast.success("Welcome back");
-    router.replace(searchParams.get("next") || "/dashboard");
+    router.replace(redirectTarget || "/dashboard");
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full">
       <CardContent className="grid gap-6 p-6">
         <div>
           <h1 className="text-2xl font-semibold">Login</h1>
           <p className="mt-1 text-sm text-slate-600">Access your jewellery stock workspace.</p>
         </div>
+        {needsAuthentication ? (
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            Please sign in to continue to your dashboard.
+          </div>
+        ) : null}
         <form className="grid gap-4" onSubmit={handleSubmit(onSubmit)}>
           <FormField label="Email" error={errors.email?.message}>
             <Input type="email" autoComplete="email" {...register("email")} />
