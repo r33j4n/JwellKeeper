@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { QrScanner, type QrScannerHandle } from "@/components/qr/qr-scanner";
 import { auditApi } from "@/lib/api/queries";
+import { playSound } from "@/lib/utils/sound";
 
 export function AuditScanPage() {
   const queryClient = useQueryClient();
@@ -31,9 +32,16 @@ export function AuditScanPage() {
       queryClient.invalidateQueries({ queryKey: ["audits"] });
       if (result.alreadyScanned) {
         toast.info("Already scanned");
+        playSound("warning");
       } else {
         toast.success("Item scanned");
+        playSound("success");
       }
+    },
+    onError: (error) => {
+      playSound("error");
+      const message = error instanceof Error ? error.message : "Item not found in audit";
+      toast.error(message);
     },
   });
 

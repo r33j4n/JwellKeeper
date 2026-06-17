@@ -18,6 +18,7 @@ import { auditApi, billingApi, jewelleryApi, settingsApi, shopApi } from "@/lib/
 import { formatMoney, formatWeight, todayIsoDate } from "@/lib/utils/format";
 import type { Jewellery } from "@/lib/api/types";
 import { cn } from "@/lib/utils/cn";
+import { playSound } from "@/lib/utils/sound";
 
 type PriceRow = {
   finalPrice: string;
@@ -189,16 +190,22 @@ export function BillCreatePage() {
     onSuccess: (jewellery) => {
       if (jewellery.status !== "AVAILABLE") {
         toast.error(`${jewellery.typeName} is ${jewellery.status.toLowerCase()} — cannot bill`);
+        playSound("error");
         return;
       }
       if (selectedIds.has(jewellery.id)) {
         toast.info("Already added to bill");
+        playSound("warning");
         return;
       }
       setCart((prev) => ({ ...prev, [jewellery.id]: { jewellery, row: emptyPriceRow() } }));
       toast.success(`${jewellery.typeName} added to bill`);
+      playSound("success");
     },
-    onError: () => toast.error("QR not recognised — try again"),
+    onError: () => {
+      playSound("error");
+      toast.error("QR not recognised — try again");
+    },
   });
 
   const create = useMutation({
