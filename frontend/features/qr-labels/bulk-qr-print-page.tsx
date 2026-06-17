@@ -60,7 +60,7 @@ export function BulkQrPrintPage() {
           return { jewellery: jewelleryItem, qrImage: qr.qrCodeBase64 };
         }),
       );
-      const printed = printQrLabels(labels, shopName, "Bulk jewellery QR labels");
+      const printed = printQrLabels(labels, shopName, "Bulk jewellery QR labels", "bulk");
       if (!printed) {
         toast.error("Popup blocked. Allow popups to print QR labels.");
       }

@@ -8,6 +8,8 @@ export type PrintableQrLabel = {
   qrImage: string;
 };
 
+type PrintLayout = "single" | "bulk";
+
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -23,24 +25,6 @@ function labelHtml(label: PrintableQrLabel, shopName: string) {
   return `
     <section class="qr-label">
 
-      <!--
-        ┌─────────────────────────────────────────────────┐
-        │  OUTER LABEL  20mm × 30mm                       │
-        │                                                 │
-        │  ┌──────────┐  ┌──────────────────┐            │
-        │  │ SHOP NAME│  │  10mm × 20mm     │            │
-        │  │ vertical │  │  inner card      │            │
-        │  │ 20mm tall│  │  ┌────────────┐  │            │
-        │  │ in 5mm   │  │  │ 9mm × 9mm  │  │            │
-        │  │ left zone│  │  │    QR      │  │            │
-        │  │          │  │  └────────────┘  │            │
-        │  │          │  │  Chain (center)  │            │
-        │  │          │  │  22KT  (center)  │            │
-        │  │          │  │  8g    (center)  │            │
-        │  └──────────┘  └──────────────────┘            │
-        └─────────────────────────────────────────────────┘
-      -->
-
       <!-- LEFT: shop name in the 5mm bleed zone -->
       <div class="shop-zone">
         <span class="shop-name">${escapeHtml(shopName)}</span>
@@ -48,30 +32,69 @@ function labelHtml(label: PrintableQrLabel, shopName: string) {
 
       <!-- CENTER: 10mm × 20mm white inner card -->
       <div class="inner-card">
-
-        <!-- QR: 9mm × 9mm, top-center, 1mm from top -->
         <img class="qr" src="${label.qrImage}" alt="QR" />
-
-        <!-- Meta: centered, below QR, 1mm bottom margin -->
         <div class="meta">
           <div class="meta-line">${escapeHtml(item.typeName)}</div>
           <div class="meta-line">${escapeHtml(item.karat)}</div>
           <div class="meta-line">${escapeHtml(formatWeight(item.weight))}</div>
         </div>
-
       </div>
 
-      <!-- RIGHT: 5mm right bleed (empty, keeps card centred) -->
+      <!-- RIGHT: 5mm right bleed -->
       <div class="right-zone"></div>
 
     </section>
   `;
 }
 
+// Bulk label HTML is IDENTICAL to the single label — same classes, same structure.
+// The rotation is handled entirely in CSS on .bulk-label.
+function bulkLabelHtml(label: PrintableQrLabel, shopName: string) {
+  const item = label.jewellery;
+
+  return `
+    <section class="bulk-label">
+
+      <div class="shop-zone">
+        <span class="shop-name">${escapeHtml(shopName)}</span>
+      </div>
+
+      <div class="inner-card">
+        <img class="qr" src="${label.qrImage}" alt="QR" />
+        <div class="meta">
+          <div class="meta-line">${escapeHtml(item.typeName)}</div>
+          <div class="meta-line">${escapeHtml(item.karat)}</div>
+          <div class="meta-line">${escapeHtml(formatWeight(item.weight))}</div>
+        </div>
+      </div>
+
+      <div class="right-zone"></div>
+
+    </section>
+  `;
+}
+
+function bulkSlotHtml(label: PrintableQrLabel | undefined, index: number, shopName: string) {
+  return `
+    <div class="bulk-slot bulk-slot--${index}">
+      ${label ? bulkLabelHtml(label, shopName) : '<div class="bulk-label" aria-hidden="true"></div>'}
+    </div>
+  `;
+}
+
+function chunkLabels(labels: PrintableQrLabel[], size: number) {
+  const chunks: PrintableQrLabel[][] = [];
+  for (let index = 0; index < labels.length; index += size) {
+    chunks.push(labels.slice(index, index + size));
+  }
+  return chunks;
+}
+
 export function printQrLabels(
   labels: PrintableQrLabel[],
   shopName: string,
-  title = "Jewellery QR Labels"
+  title = "Jewellery QR Labels",
+  layout: PrintLayout = "single"
 ) {
   if (!labels.length) return false;
 
@@ -86,7 +109,6 @@ export function printQrLabels(
       <head>
         <title>${escapeHtml(title)}</title>
         <style>
-          /* ─── Reset ────────────────────────────────────── */
           * { box-sizing: border-box; margin: 0; padding: 0; }
 
           body {
@@ -95,26 +117,11 @@ export function printQrLabels(
             color: #111827;
           }
 
-          /* ─── Outer label: 20mm × 30mm ─────────────────── */
-          .qr-label {
-            width: 20mm;
-            height: 30mm;
-            position: relative;
-            display: flex;
-            flex-direction: row;
-            align-items: center;        /* vertically centre inner-card in 30mm */
-            justify-content: center;
-            break-after: page;
-            page-break-after: always;
-            break-inside: avoid;
-            page-break-inside: avoid;
-            overflow: hidden;
-          }
+          /* ─── Shared inner styles (used by both single + bulk) ── */
 
-          /* ─── Left 5mm bleed: shop name ────────────────── */
           .shop-zone {
             width: 5mm;
-            height: 20mm;              /* same height as inner card */
+            height: 20mm;
             flex-shrink: 0;
             display: flex;
             align-items: center;
@@ -132,20 +139,12 @@ export function printQrLabels(
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            /* rotate so text reads bottom → top */
             writing-mode: vertical-rl;
             transform: rotate(180deg);
             text-align: center;
             max-height: 19mm;
           }
 
-          /* ─── Inner white card: 10mm × 20mm ────────────── */
-          /*
-           *  Height budget (strict):
-           *  1mm top pad + 9mm QR + 0.2mm gap + text zone + 0.3mm bottom pad = 20mm
-           *  → text zone = 20 − 1 − 9 − 0.2 − 0.3 = 9.5mm for 3 lines
-           *  → ~3.1mm per line at font-size 2.8mm with line-height 1.1 ✓
-           */
           .inner-card {
             width: 10mm;
             height: 20mm;
@@ -153,19 +152,16 @@ export function printQrLabels(
             border: 0.25mm solid #b8860b;
             border-radius: 0.8mm;
             background: #fff;
-
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-
-            padding-top: 1mm;           /* 1mm top clearance for QR */
-            padding-bottom: 0.3mm;      /* minimal — use every mm for text */
-            gap: 0.2mm;                 /* tiny gap between QR and text block */
+            padding-top: 1mm;
+            padding-bottom: 0.3mm;
+            gap: 0.2mm;
             overflow: hidden;
           }
 
-          /* ─── QR: full 9mm × 9mm — no compromise ────────── */
           .qr {
             width: 9mm;
             height: 9mm;
@@ -175,22 +171,21 @@ export function printQrLabels(
             image-rendering: pixelated;
           }
 
-          /* ─── Meta text: max size in remaining 9.5mm ─────── */
           .meta {
             width: 100%;
-            flex: 1;                    /* fills all remaining height */
+            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-evenly; /* spread 3 lines across full zone */
+            justify-content: space-evenly;
             text-align: center;
-            padding: 0 0.3mm;           /* tiny side padding so text doesn't touch border */
+            padding: 0 0.3mm;
           }
 
           .meta-line {
-            font-size: 1.6mm;           /* ≈ 7.9pt — maximum that fits 3 lines in 9.5mm */
-            font-weight: 900;           /* boldest valid CSS value */
-            line-height: 1;             /* tight — let space-evenly handle spacing */
+            font-size: 1.6mm;
+            font-weight: 900;
+            line-height: 1;
             color: #111827;
             white-space: nowrap;
             overflow: hidden;
@@ -199,27 +194,110 @@ export function printQrLabels(
             text-align: center;
           }
 
-          /* ─── Right 5mm bleed (keeps card centred) ──────── */
           .right-zone {
             width: 5mm;
             flex-shrink: 0;
           }
 
-          /* ─── Print page setup ──────────────────────────── */
+          ${layout === "bulk" ? `
+          /* ─── Bulk sheet: 90mm × 20mm, three 30×20mm slots ─────── */
+          main {
+            width: 90mm;
+            margin: 0;
+            padding: 0;
+          }
+
+          .bulk-sheet {
+            width: 90mm;
+            height: 20mm;
+            position: relative;
+            break-after: page;
+            page-break-after: always;
+            break-inside: avoid;
+            page-break-inside: avoid;
+            overflow: hidden;
+          }
+
+          .bulk-slot {
+            position: absolute;
+            top: 0;
+            width: 30mm;
+            height: 20mm;
+            overflow: hidden;
+          }
+          .bulk-slot--0 { left: 0mm; }
+          .bulk-slot--1 { left: 30mm; }
+          .bulk-slot--2 { left: 60mm; }
+
+          /*
+           * .bulk-label is the exact single label (20mm × 30mm),
+           * positioned and rotated 90° CW to fill the 30mm × 20mm slot.
+           *
+           * Math:
+           *   Label centre = (10mm, 15mm) within itself.
+           *   Slot  centre = (15mm, 10mm) within the slot.
+           *   So place the label at: left = 15-10 = 5mm, top = 10-15 = -5mm
+           *   Rotate around the label's own centre: transform-origin: 10mm 15mm
+           *   After 90° CW rotation the 20mm wide × 30mm tall label
+           *   occupies exactly 30mm wide × 20mm tall — perfect fit.
+           */
+          .bulk-label {
+            position: absolute;
+            left: 5mm;
+            top: -5mm;
+            width: 20mm;
+            height: 30mm;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(90deg);
+            transform-origin: 10mm 15mm;
+            overflow: hidden;
+          }
+          ` : `
+          /* ─── Single label: 20mm × 30mm ─────────────── */
+          .qr-label {
+            width: 20mm;
+            height: 30mm;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            break-after: page;
+            page-break-after: always;
+            break-inside: avoid;
+            page-break-inside: avoid;
+            overflow: hidden;
+          }
+          `}
+
           @page {
-            size: 20mm 30mm;
+            size: ${layout === "bulk" ? "90mm 20mm" : "20mm 30mm"};
             margin: 0;
           }
 
           @media print {
             body { margin: 0; padding: 0; background: #fff; }
-            .qr-label { margin: 0; }
+            ${layout === "bulk"
+              ? "main { width: 90mm; } .bulk-sheet { margin: 0; }"
+              : ".qr-label { margin: 0; }"}
           }
         </style>
       </head>
       <body>
         <main>
-          ${labels.map((label) => labelHtml(label, normalizedShopName)).join("")}
+          ${layout === "bulk"
+            ? chunkLabels(labels, 3)
+                .map(
+                  (pageLabels) => `
+                    <section class="bulk-sheet">
+                      ${Array.from({ length: 3 }, (_, index) => bulkSlotHtml(pageLabels[index], index, normalizedShopName)).join("")}
+                    </section>
+                  `,
+                )
+                .join("")
+            : labels.map((label) => labelHtml(label, normalizedShopName)).join("")}
         </main>
         <script>
           window.onload = () => {
