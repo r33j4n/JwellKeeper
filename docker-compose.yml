@@ -9,8 +9,6 @@ services:
       MYSQL_USER: ${MYSQL_USER:-jwellkeeper}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-jwellkeeper}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
-    ports:
-      - "127.0.0.1:3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
@@ -40,10 +38,10 @@ services:
       QR_IMAGE_SIZE: ${QR_IMAGE_SIZE:-300}
       STORAGE_ROOT: /app/storage
       JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseContainerSupport"
-    ports:
-      - "127.0.0.1:8080:8080"
     volumes:
       - backend-storage:/app/storage
+    expose:
+      - "8080"
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
       interval: 15s
@@ -66,9 +64,23 @@ services:
       BACKEND_API_URL: http://backend:8080
       SESSION_SECRET: ${SESSION_SECRET:-local-development-session-secret-change-me}
       NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-JwellKeeper}
-      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      COOKIE_SECURE: "false"
+    expose:
+      - "3000"
+
+  nginx:
+    image: nginx:alpine
+    container_name: jwellkeeper-nginx
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
     ports:
-      - "127.0.0.1:3000:3000"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
 
 volumes:
   mysql-data:
