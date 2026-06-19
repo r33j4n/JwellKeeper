@@ -346,6 +346,10 @@ export interface StockAdjustment {
   afterKarat: string | null;
   beforeWeight: string | null;
   afterWeight: string | null;
+  beforeDesignName: string | null;
+  afterDesignName: string | null;
+  beforeNotes: string | null;
+  afterNotes: string | null;
   beforeStatus: JewelleryStatus | null;
   afterStatus: JewelleryStatus | null;
   reason: string;

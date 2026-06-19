@@ -26,6 +26,8 @@ export function JewelleryDetailPage() {
   const [adjustPassword, setAdjustPassword] = useState("");
   const [adjustReason, setAdjustReason] = useState("");
   const [adjustKarat, setAdjustKarat] = useState("");
+  const [adjustDesignName, setAdjustDesignName] = useState("");
+  const [adjustNotes, setAdjustNotes] = useState("");
   const [adjustWeight, setAdjustWeight] = useState("");
   const [adjustTypeId, setAdjustTypeId] = useState("");
   const canManageStock = user?.role === "OWNER" || user?.role === "MANAGER";
@@ -78,6 +80,8 @@ export function JewelleryDetailPage() {
         reason: adjustReason,
         typeId: adjustTypeId || null,
         karat: adjustKarat || null,
+        designName: adjustDesignName || null,
+        notes: adjustNotes || null,
         weight: adjustWeight || null,
         archive,
       }),
@@ -87,6 +91,8 @@ export function JewelleryDetailPage() {
       setAdjustPassword("");
       setAdjustReason("");
       setAdjustKarat("");
+      setAdjustDesignName("");
+      setAdjustNotes("");
       setAdjustWeight("");
       setAdjustTypeId("");
       toast.success("Stock adjustment recorded");
@@ -191,6 +197,8 @@ export function JewelleryDetailPage() {
               ))}
             </select>
             <Input placeholder="New karat, e.g. 22K" value={adjustKarat} onChange={(event) => setAdjustKarat(event.target.value.toUpperCase())} />
+            <Input placeholder="New sub-type / design" value={adjustDesignName} onChange={(event) => setAdjustDesignName(event.target.value)} />
+            <Input placeholder="New notes" value={adjustNotes} onChange={(event) => setAdjustNotes(event.target.value)} />
             <Input inputMode="decimal" placeholder="New weight" value={adjustWeight} onChange={(event) => setAdjustWeight(event.target.value)} />
             <Input placeholder="Reason" value={adjustReason} onChange={(event) => setAdjustReason(event.target.value)} />
             <Input type="password" placeholder="Owner/manager password" value={adjustPassword} onChange={(event) => setAdjustPassword(event.target.value)} />

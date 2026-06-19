@@ -12,6 +12,8 @@ public record StockAdjustmentRequest(
         @NotBlank @Size(max = 1000) String reason,
         UUID typeId,
         @Size(max = 16) String karat,
+        @Size(max = 160) String designName,
+        @Size(max = 1000) String notes,
         @DecimalMin(value = "0.001") BigDecimal weight,
         Boolean archive
 ) {
