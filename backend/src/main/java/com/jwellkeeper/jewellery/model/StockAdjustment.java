@@ -38,6 +38,18 @@ public class StockAdjustment extends TenantScopedEntity {
     @Column(name = "before_weight", precision = 12, scale = 3)
     private BigDecimal beforeWeight;
 
+    @Column(name = "before_design_name", length = 160)
+    private String beforeDesignName;
+
+    @Column(name = "after_design_name", length = 160)
+    private String afterDesignName;
+
+    @Column(name = "before_notes", length = 1000)
+    private String beforeNotes;
+
+    @Column(name = "after_notes", length = 1000)
+    private String afterNotes;
+
     @Column(name = "after_weight", precision = 12, scale = 3)
     private BigDecimal afterWeight;
 

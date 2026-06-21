@@ -67,7 +67,7 @@ export const jewelleryApi = {
   deleteImage: (id: string, imageId: string) => apiClient.delete(`/jewellery/${id}/images/${imageId}`).then((r) => r.data),
   adjust: (
     id: string,
-    payload: { password: string; reason: string; typeId?: string | null; karat?: string | null; weight?: string | null; archive?: boolean },
+    payload: { password: string; reason: string; typeId?: string | null; karat?: string | null; designName?: string | null; notes?: string | null; weight?: string | null; archive?: boolean },
   ) => apiClient.post<StockAdjustment>(`/jewellery/${id}/adjustments`, payload).then((r) => r.data),
   adjustments: (id: string, params: { page?: number; size?: number } = {}) =>
     apiClient.get<PageResponse<StockAdjustment>>(`/jewellery/${id}/adjustments`, { params }).then((r) => r.data),

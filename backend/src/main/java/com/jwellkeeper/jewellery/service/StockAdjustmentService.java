@@ -41,8 +41,8 @@ public class StockAdjustmentService {
     @Transactional
     public StockAdjustmentResponse adjust(UUID jewelleryId, StockAdjustmentRequest request) {
         authorizationService.validateOwnerOrManagerPassword(request.password(), "Owner or manager password is required for stock adjustments");
-        if (request.typeId() == null && isBlank(request.karat()) && request.weight() == null && !Boolean.TRUE.equals(request.archive())) {
-            throw new BadRequestException("Provide at least one stock-critical change");
+        if (request.typeId() == null && isBlank(request.karat()) && request.designName() == null && request.notes() == null && request.weight() == null && !Boolean.TRUE.equals(request.archive())) {
+            throw new BadRequestException("Provide at least one stock or metadata change");
         }
         UUID tenantId = TenantContext.requireTenantId();
         Jewellery jewellery = jewelleryRepository.lockByIdAndTenantId(jewelleryId, tenantId)
@@ -51,12 +51,17 @@ public class StockAdjustmentService {
             throw new ConflictException("Sold jewellery cannot be adjusted directly. Use bill correction flow.");
         }
 
+        String previousDesignName = jewellery.getDesignName();
+        String previousNotes = jewellery.getNotes();
+
         StockAdjustment adjustment = new StockAdjustment();
         adjustment.setTenantId(tenantId);
         adjustment.setJewelleryId(jewellery.getId());
         adjustment.setBeforeTypeId(jewellery.getTypeId());
         adjustment.setBeforeKarat(jewellery.getKarat());
         adjustment.setBeforeWeight(jewellery.getWeight());
+        adjustment.setBeforeDesignName(previousDesignName);
+        adjustment.setBeforeNotes(previousNotes);
         adjustment.setBeforeStatus(jewellery.getStatus());
         adjustment.setReason(request.reason().trim());
         adjustment.setCreatedBy(TenantContext.requireUser().userId());
@@ -70,6 +75,12 @@ public class StockAdjustmentService {
         if (!isBlank(request.karat())) {
             jewellery.setKarat(normalizeKarat(request.karat()));
         }
+        if (request.designName() != null) {
+            jewellery.setDesignName(normalizeOptionalText(request.designName()));
+        }
+        if (request.notes() != null) {
+            jewellery.setNotes(normalizeOptionalText(request.notes()));
+        }
         if (request.weight() != null) {
             jewellery.setWeight(request.weight());
         }
@@ -80,6 +91,8 @@ public class StockAdjustmentService {
 
         adjustment.setAfterTypeId(jewellery.getTypeId());
         adjustment.setAfterKarat(jewellery.getKarat());
+        adjustment.setAfterDesignName(jewellery.getDesignName());
+        adjustment.setAfterNotes(jewellery.getNotes());
         adjustment.setAfterWeight(jewellery.getWeight());
         adjustment.setAfterStatus(jewellery.getStatus());
         adjustmentRepository.save(adjustment);
@@ -98,7 +111,11 @@ public class StockAdjustmentService {
                         "beforeKarat", nullSafe(adjustment.getBeforeKarat()),
                         "afterKarat", nullSafe(adjustment.getAfterKarat()),
                         "beforeWeight", nullSafe(adjustment.getBeforeWeight()),
-                        "afterWeight", nullSafe(adjustment.getAfterWeight())
+                        "afterWeight", nullSafe(adjustment.getAfterWeight()),
+                        "beforeDesignName", nullSafe(adjustment.getBeforeDesignName()),
+                        "afterDesignName", nullSafe(adjustment.getAfterDesignName()),
+                        "beforeNotes", nullSafe(adjustment.getBeforeNotes()),
+                        "afterNotes", nullSafe(adjustment.getAfterNotes())
                 )
         );
         logService.log("STOCK_ADJUSTED", "Jewellery", jewellery.getId(), "SUCCESS", "Stock adjustment recorded", Map.of("reason", request.reason()));
@@ -120,6 +137,10 @@ public class StockAdjustmentService {
                 adjustment.getAfterKarat(),
                 adjustment.getBeforeWeight(),
                 adjustment.getAfterWeight(),
+                adjustment.getBeforeDesignName(),
+                adjustment.getAfterDesignName(),
+                adjustment.getBeforeNotes(),
+                adjustment.getAfterNotes(),
                 adjustment.getBeforeStatus(),
                 adjustment.getAfterStatus(),
                 adjustment.getReason(),
@@ -134,6 +155,14 @@ public class StockAdjustmentService {
             throw new BadRequestException("karat must look like 24K, 22K, or 18K");
         }
         return normalized;
+    }
+
+    private String normalizeOptionalText(String value) {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 
     private boolean isBlank(String value) {
